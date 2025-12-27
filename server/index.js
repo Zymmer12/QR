@@ -75,12 +75,22 @@ app.get('/api/queues', (req, res) => {
 
 // Get single queue
 app.get('/api/queues/:id', (req, res) => {
-    const queue = db.prepare('SELECT * FROM queues WHERE id = ?').get(req.params.id);
-    if (queue) {
-        res.json(queue);
-    } else {
-        res.status(404).json({ error: 'Queue not found' });
+    let queue = db.prepare('SELECT * FROM queues WHERE id = ?').get(req.params.id);
+    
+    // Auto-create if not found (lazy initialization) to fix DB reset issues on Render
+    if (!queue) {
+        try {
+            const insert = db.prepare('INSERT INTO queues (id, status) VALUES (?, ?)');
+            insert.run(req.params.id, 'available');
+            queue = { id: req.params.id, status: 'available', customer_name: null, line_id: null };
+            console.log(`Auto-created queue ${req.params.id}`);
+        } catch (err) {
+            console.error('Error creating queue:', err);
+             return res.status(500).json({ error: 'Failed to create queue' });
+        }
     }
+
+    res.json(queue);
 });
 
 // Reserve Queue
