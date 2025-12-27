@@ -124,7 +124,11 @@ app.post('/api/admin/call', async (req, res) => {
     // Send LINE Notification
     if (queue.line_id) {
         const msg = `ถึงคิวของคุณแล้ว! (คิวที่ ${id})\nกรุณามาที่หน้าร้านได้เลยครับ\n\nYour queue (${id}) is ready!`;
-        await pushMessage(queue.line_id, msg);
+        try {
+            await pushMessage(queue.line_id, msg);
+        } catch (err) {
+            console.error('Failed to notify LINE user:', queue.line_id, err);
+        }
     }
 
     broadcastUpdate();

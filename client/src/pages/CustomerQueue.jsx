@@ -132,7 +132,7 @@ export default function CustomerQueue() {
                                 <label><User size={18} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />ชื่อของคุณ (Name)</label>
                                 <input
                                     type="text"
-                                    placeholder="Ex. สมชาย"
+                                    placeholder="โปรดระบุ"
                                     value={name}
                                     onChange={e => setName(e.target.value)}
                                 />
@@ -142,7 +142,7 @@ export default function CustomerQueue() {
                                 <label><MessageCircle size={18} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />LINE ID</label>
                                 <input
                                     type="text"
-                                    placeholder="Ex. somchai.line"
+                                    placeholder="โปรดระบุ"
                                     value={lineId}
                                     onChange={e => setLineId(e.target.value)}
                                 />
