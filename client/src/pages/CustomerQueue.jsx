@@ -10,14 +10,17 @@ export default function CustomerQueue() {
     const [queue, setQueue] = useState(null);
     const [name, setName] = useState('');
     const [lineId, setLineId] = useState(''); // Restore state to hold ID silently
+    const [liffLoading, setLiffLoading] = useState(true); // New: Check if LIFF is loading
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
 
+    // ... (Keep other logic - shortened for brevity if possible, but matching context)
     // Check if I am the owner of this queue from local storage
     const myRes = JSON.parse(localStorage.getItem('my_queue') || '{}');
     const isMyQueue = myRes.queueId === parseInt(id);
 
     useEffect(() => {
+        // ... (Keep existing fetch logic)
         // Initial fetch
         api.get(`/queues/${id}`).then(res => {
             setQueue(res.data);
@@ -43,7 +46,10 @@ export default function CustomerQueue() {
         const initLiff = async () => {
             try {
                 const liffId = import.meta.env.VITE_LIFF_ID;
-                if (!liffId) return;
+                if (!liffId) {
+                    setLiffLoading(false);
+                    return;
+                }
 
                 await liff.init({ liffId });
                 if (liff.isLoggedIn()) {
@@ -54,11 +60,14 @@ export default function CustomerQueue() {
                 }
             } catch (err) {
                 console.error('LIFF Init Error:', err);
+            } finally {
+                setLiffLoading(false);
             }
         };
         initLiff();
     }, []);
 
+    // ... (rest of handleReserve)
     const handleReserve = async (e) => {
         e.preventDefault();
         if (!name) return toast.error('กรุณากรอกข้อมูลให้ครบ');
@@ -76,7 +85,7 @@ export default function CustomerQueue() {
         }
     };
 
-    // Play sound when status becomes 'called'
+    // ... (Play sound effect)
     useEffect(() => {
         if (queue?.status === 'called') {
             import('../utils/audio').then(mod => mod.playAlertSound());
@@ -109,9 +118,25 @@ export default function CustomerQueue() {
                         />
                     </div>
 
-                    <button type="submit" className="btn btn-primary" disabled={submitting}>
+                    {/* Debug: Connection Status */}
+                    <div style={{ fontSize: '0.8rem', textAlign: 'center', marginBottom: 10, minHeight: 20 }}>
+                        {liffLoading ? (
+                            <span style={{ color: '#999' }}>⏳ กำลังเชื่อมต่อ LINE...</span>
+                        ) : lineId ? (
+                            <span style={{ color: 'green' }}>✅ เชื่อมต่อ LINE: {lineId.slice(0, 4)}...</span>
+                        ) : (
+                            <span style={{ color: '#ef4444' }}>⚠️ ไม่พบข้อมูล LINE (จะไม่แจ้งเตือน)</span>
+                        )}
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="btn btn-primary"
+                        disabled={submitting || liffLoading}
+                    >
                         {submitting ? 'กำลังบันทึก...' : 'จองคิวทันที (Reserve Now)'}
                     </button>
+                    {/* ... */}
                 </form>
             </div>
         );
