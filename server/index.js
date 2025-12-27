@@ -86,7 +86,7 @@ app.get('/api/queues/:id', (req, res) => {
 // Reserve Queue
 app.post('/api/reserve', (req, res) => {
     const { id, name, lineId } = req.body;
-    if (!id || !name || !lineId) {
+    if (!id || !name) {
         return res.status(400).json({ error: 'Missing fields' });
     }
 

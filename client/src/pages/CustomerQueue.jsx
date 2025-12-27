@@ -9,7 +9,7 @@ export default function CustomerQueue() {
     const { id } = useParams();
     const [queue, setQueue] = useState(null);
     const [name, setName] = useState('');
-    const [lineId, setLineId] = useState('');
+    const [lineId, setLineId] = useState(''); // Restore state to hold ID silently
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
 
@@ -43,19 +43,14 @@ export default function CustomerQueue() {
         const initLiff = async () => {
             try {
                 const liffId = import.meta.env.VITE_LIFF_ID;
-                if (!liffId) {
-                    // console.warn('LIFF ID not configured'); 
-                    return;
-                }
+                if (!liffId) return;
 
                 await liff.init({ liffId });
                 if (liff.isLoggedIn()) {
                     const profile = await liff.getProfile();
-                    setLineId(profile.userId);
+                    setLineId(profile.userId); // Restore: Capture ID from LIFF
                     // Only set name if empty (user might have typed it)
                     setName(prev => prev || profile.displayName);
-                } else {
-                    // Optional: liff.login(); if you want to force login
                 }
             } catch (err) {
                 console.error('LIFF Init Error:', err);
@@ -66,13 +61,14 @@ export default function CustomerQueue() {
 
     const handleReserve = async (e) => {
         e.preventDefault();
-        if (!name || !lineId) return toast.error('กรุณากรอกข้อมูลให้ครบ');
+        if (!name) return toast.error('กรุณากรอกข้อมูลให้ครบ');
 
         setSubmitting(true);
         try {
+            // Send captured lineId (from LIFF) to backend
             await api.post('/reserve', { id, name, lineId });
             toast.success('จองคิวสำเร็จ! (Reserved)');
-            localStorage.setItem('my_queue', JSON.stringify({ queueId: parseInt(id), name, lineId }));
+            localStorage.setItem('my_queue', JSON.stringify({ queueId: parseInt(id), name }));
         } catch (err) {
             toast.error(err.response?.data?.error || 'การจองล้มเหลว');
         } finally {
@@ -103,60 +99,19 @@ export default function CustomerQueue() {
                 </div>
 
                 <form onSubmit={handleReserve}>
-                    {/* LIFF Active State: One Click Reserve */}
-                    {lineId ? (
-                        <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                            <div style={{
-                                width: 80, height: 80, borderRadius: '50%', background: '#f1f5f9',
-                                margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                border: '3px solid white', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                            }}>
-                                {/* Use actual profile image if potentially available later, now default icon */}
-                                <User size={40} color="var(--primary)" />
-                            </div>
-                            <h3 style={{ margin: '0 0 8px', color: 'var(--text-dark)' }}>สวัสดี, {name}</h3>
-                            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-light)' }}>
-                                ยืนยันการจองด้วยบัญชี LINE นี้
-                            </p>
+                    <div className="input-group">
+                        <label><User size={18} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />ชื่อของคุณ (Name)</label>
+                        <input
+                            type="text"
+                            placeholder="โปรดระบุ"
+                            value={name}
+                            onChange={e => setName(e.target.value)}
+                        />
+                    </div>
 
-                            <div style={{ marginTop: 24 }}>
-                                <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '16px', fontSize: '1.2rem' }} disabled={submitting}>
-                                    {submitting ? 'กำลังจอง...' : 'ยืนยันการจอง (Confirm)'}
-                                </button>
-                            </div>
-                        </div>
-                    ) : (
-                        /* Fallback State: Manual Input */
-                        <>
-                            <div className="input-group">
-                                <label><User size={18} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />ชื่อของคุณ (Name)</label>
-                                <input
-                                    type="text"
-                                    placeholder="โปรดระบุ"
-                                    value={name}
-                                    onChange={e => setName(e.target.value)}
-                                />
-                            </div>
-
-                            <div className="input-group">
-                                <label><MessageCircle size={18} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />LINE ID</label>
-                                <input
-                                    type="text"
-                                    placeholder="โปรดระบุ"
-                                    value={lineId}
-                                    onChange={e => setLineId(e.target.value)}
-                                />
-                            </div>
-
-                            <button type="submit" className="btn btn-primary" disabled={submitting}>
-                                {submitting ? 'กำลังบันทึก...' : 'จองคิวทันที (Reserve Now)'}
-                            </button>
-
-                            <p style={{ textAlign: 'center', fontSize: '0.8rem', color: '#94a3b8', marginTop: 10 }}>
-                                *แนะนำ: เปิดใน LINE เพื่อจองง่ายๆ เพียงคลิกเดียว
-                            </p>
-                        </>
-                    )}
+                    <button type="submit" className="btn btn-primary" disabled={submitting}>
+                        {submitting ? 'กำลังบันทึก...' : 'จองคิวทันที (Reserve Now)'}
+                    </button>
                 </form>
             </div>
         );
