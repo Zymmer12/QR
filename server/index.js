@@ -48,7 +48,7 @@ function handleEvent(event) {
 
     // Reply with User ID
     const userId = event.source.userId;
-    const replyText = `สวัสดีครับ! นี่คือ ID ของคุณ:\n\n${userId}\n\n(กดคัดลอก แล้วนำไปใส่ในช่องจองคิวได้เลยครับ)`;
+    const replyText = `สวัสดีครับ รับทราบครับ\n(ID ของคุณ: ${userId})`;
 
     return lineClient.replyMessage(event.replyToken, {
         type: 'text',
