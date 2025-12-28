@@ -13,6 +13,7 @@ export default function CustomerQueue() {
     const [liffLoading, setLiffLoading] = useState(true); // New: Check if LIFF is loading
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [errorMsg, setErrorMsg] = useState(''); // Store detailed error
 
     // ... (Keep other logic - shortened for brevity if possible, but matching context)
     // Check if I am the owner of this queue from local storage
@@ -26,6 +27,9 @@ export default function CustomerQueue() {
             setQueue(res.data);
             setLoading(false);
         }).catch(err => {
+            console.error(err);
+            const msg = err.response?.data?.error || err.message || 'Unknown Error';
+            setErrorMsg(msg);
             toast.error('ไม่พบข้อมูลคิว (Queue not found)');
             setLoading(false);
         });
@@ -96,7 +100,26 @@ export default function CustomerQueue() {
     }, [queue?.status]);
 
     if (loading) return <div className="card">Loading...</div>;
-    if (!queue) return <div className="card">ไม่พบหมายเลขคิวนี้</div>;
+
+
+    // ...
+
+    if (loading) return <div className="card">Loading...</div>;
+
+    // Show detailed error if queue is not found
+    if (!queue) return (
+        <div className="card" style={{ textAlign: 'center', color: '#ef4444' }}>
+            <AlertCircle size={48} style={{ margin: '0 auto 16px' }} />
+            <h3>ไม่พบหมายเลขคิวนี้</h3>
+            <div style={{ background: '#fee2e2', padding: 10, borderRadius: 8, marginTop: 10, fontSize: '0.9rem', color: '#b91c1c' }}>
+                <p><strong>Queue ID:</strong> {id || 'NULL'}</p>
+                <p><strong>Error:</strong> {errorMsg}</p>
+            </div>
+            <p style={{ marginTop: 20, color: '#666', fontSize: '0.8rem' }}>
+                ลองสแกน QR Code ใหม่อีกครั้ง
+            </p>
+        </div>
+    );
 
     // --- Status: AVAILABLE ---
     if (queue.status === 'available') {
