@@ -13,6 +13,15 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function App() {
+  // Handle LIFF Path Redirect
+  useEffect(() => {
+    // Check if there is a path in the URL that React Router missed (common in SPAs with some hosting)
+    const path = window.location.pathname;
+    if (path.startsWith('/queue/') && window.location.search) {
+      // Sometimes query params mess up clean routing, but this is basic check
+    }
+  }, []);
+
   return (
     <>
       <Routes>
@@ -25,6 +34,9 @@ function App() {
             <AdminDashboard />
           </ProtectedRoute>
         } />
+
+        {/* Catch-all redirect to help with debug */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Toaster position="bottom-center" />
     </>

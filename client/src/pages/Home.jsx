@@ -1,8 +1,39 @@
-import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { QrCode } from 'lucide-react';
+import liff from '@line/liff';
 
 export default function Home() {
     const navigate = useNavigate();
+    const location = useLocation();
+
+    useEffect(() => {
+        const handleRedirect = async () => {
+            try {
+                // If the URL actually contains /queue/X, React Router should handle it.
+                // But sometimes LIFF passes it as query param '?path=' or liff.state
+
+                // Check standard query param ?path=/queue/1
+                const params = new URLSearchParams(location.search);
+                const path = params.get('path');
+                if (path && path.startsWith('/queue/')) {
+                    navigate(path);
+                    return;
+                }
+
+                // Try initializing LIFF to see if there is context
+                const liffId = import.meta.env.VITE_LIFF_ID;
+                if (liffId) {
+                    await liff.init({ liffId });
+                    // Check if there is a 'liff.state' which might contain the path
+                    // (Line sometimes puts the path in query param 'liff.state' with encoding)
+                }
+            } catch (e) {
+                console.error("Redirect check failed", e);
+            }
+        };
+        handleRedirect();
+    }, [location, navigate]);
 
     return (
         <div className="card" style={{ textAlign: 'center', marginTop: '40px' }}>
